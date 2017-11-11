@@ -4,18 +4,26 @@ from sklearn.metrics import log_loss
 
 
 class Consistency(Callback):
-    def __init__(self, tournament_df):
-        super(Consistency, self).__init__()
-        self.era_indices = self.get_era_indices(tournament_df)
+    """
+    Callback class that calculates Numerai consistency metric at each epoch
+    of training. It also adds the consistency to the training history.
+    """
 
-    def get_era_indices(self, tournament_df):
+    def __init__(self, tournament_df):
+        """
+        :param tournament_df: Pandas DataFrame containing the Numerai tournament data
+        """
+        super(Consistency, self).__init__()
+        self.era_indices = self._get_era_indices(tournament_df)
+
+    def _get_era_indices(self, tournament_df):
         indices = []
         validation = tournament_df[tournament_df.data_type == 'validation']
         for era in validation.era.unique():
             indices.append(validation.era == era)
         return indices
 
-    def consistency(self, era_indices, validation_y, validation_yhat):
+    def _consistency(self, era_indices, validation_y, validation_yhat):
         num_better_random = 0.0
         for indices in era_indices:
             labels = validation_y[indices]
@@ -28,7 +36,7 @@ class Consistency(Callback):
     def on_epoch_end(self, epoch, logs=None):
         y_hat = self.model.predict(self.validation_data[0])
         y = self.validation_data[1]
-        c = self.consistency(self.era_indices, y, y_hat)
+        c = self._consistency(self.era_indices, y, y_hat)
         if logs is not None:
             logs['consistency'] = c
         print('  consistency: {:.2%}'.format(c))
