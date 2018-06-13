@@ -29,7 +29,7 @@ class Consistency(Callback):
             labels = validation_y[indices]
             era_preds = validation_yhat[indices]
             ll = log_loss(labels, era_preds)
-            if ll < -log(.5):
+            if ll < .693:
                 num_better_random += 1.0
         return num_better_random / len(era_indices)
 
